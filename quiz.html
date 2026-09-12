@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TOEIC Homework Canvas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confetti-canvas"></canvas>
+
+  <div class="container">
+    <!-- Main Top Navigation -->
+    <header class="app-header">
+      <a href="index.html" class="brand">
+        <span class="brand-badge">TOEIC</span>
+        <span class="brand-title">Interactive Canvas</span>
+      </a>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <button id="btn-toggle-theme" class="btn-icon" title="Chuyển chế độ Sáng/Tối">
+          🌓
+        </button>
+        <nav class="nav-links">
+          <a href="student.html" class="nav-link">Cây Tri Thức & Tiến độ</a>
+          <a href="dashboard.html" class="nav-link">Dashboard GV</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- STEP 1: Student Identity Selection Screen -->
+    <div id="login-section" class="card">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div class="badge badge-primary" style="margin-bottom: 10px;">XÁC NHẬN HỌ TÊN HỌC VIÊN</div>
+        <h2 id="assignment-title-login" style="font-size: 20px; font-weight: 800; margin-bottom: 8px;">Đang tải thông tin bài tập...</h2>
+        <p style="font-size: 13.5px; color: var(--text-secondary);">Vui lòng chọn Lớp và Tên của bạn để bắt đầu làm bài và tích lũy điểm EXP cho Cây Tri Thức.</p>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="select-class">1. Lớp học của bạn:</label>
+        <select id="select-class" class="form-select">
+          <option value="">-- Chọn Lớp (Ví dụ: TOEIC_B_TB39, TOEIC_B_TB45) --</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="select-student">2. Họ và Tên học sinh:</label>
+        <select id="select-student" class="form-select" disabled>
+          <option value="">-- Vui lòng chọn Lớp trước --</option>
+        </select>
+      </div>
+
+      <!-- Hoặc nhập tên tự do nếu chưa có trong danh sách -->
+      <div id="custom-name-box" style="display: none; margin-bottom: 18px;">
+        <label class="form-label" for="input-custom-name">Nhập Họ và Tên của bạn:</label>
+        <input type="text" id="input-custom-name" class="form-input" placeholder="Ví dụ: Nguyễn Văn A">
+      </div>
+
+      <div id="login-status-box" style="display: none; margin-bottom: 18px; padding: 12px; border-radius: var(--radius-md);"></div>
+
+      <button id="btn-start-canvas" class="btn btn-primary btn-block btn-lg" disabled>
+        🚀 Mở Canvas Làm Bài
+      </button>
+    </div>
+
+    <!-- STEP 2: GEMINI CANVAS QUIZ WIDGET -->
+    <div id="canvas-section" class="gemini-canvas-box" style="display: none;">
+      
+      <!-- Top Canvas Header Bar -->
+      <div class="canvas-top-header">
+        <div id="canvas-assignment-title" class="canvas-title-text">
+          TOEIC Grammar Practice
+        </div>
+        <div class="canvas-actions">
+          <button id="btn-share-canvas" class="btn-icon" title="Sao chép link chia sẻ">
+            🔗
+          </button>
+          <button id="btn-close-canvas" class="btn-icon" title="Thoát bài làm">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Progress Slider & Live Badges Row -->
+      <div class="canvas-progress-row">
+        <div class="canvas-progress-track">
+          <div id="canvas-progress-bar" class="canvas-progress-bar"></div>
+        </div>
+        <div id="canvas-counter-text" class="canvas-counter-text">1 / 50</div>
+        <div id="live-wrong-badge" class="badge-pill-wrong">✕ 0</div>
+        <div id="live-correct-badge" class="badge-pill-correct">✓ 0</div>
+      </div>
+
+      <!-- Audio Section (Cho bài Nghe Listening - Giới hạn tối đa 2 lần nghe) -->
+      <div id="canvas-audio-box" class="canvas-audio-section" style="display: none;">
+        <audio id="canvas-audio-player" controls preload="auto" style="flex: 1;">
+          Trình duyệt không hỗ trợ audio.
+        </audio>
+        <span id="audio-play-counter-badge" class="audio-play-counter">
+          🔊 Lần nghe: 0 / 2
+        </span>
+      </div>
+
+      <!-- Passage Container (Part 6/7 Reading hoặc Part 3/4 Transcript Preview) -->
+      <div id="canvas-passage-box" class="passage-review-box" style="display: none;">
+        <div id="canvas-passage-title" class="passage-review-header">📌 Đoạn văn / Audio Context</div>
+        <div id="canvas-passage-content" style="white-space: pre-line;"></div>
+      </div>
+
+      <!-- Question Content Area -->
+      <div id="canvas-question-area">
+        <div id="canvas-q-number" class="canvas-q-number">Question 1</div>
+        <div id="canvas-q-text" class="canvas-q-text">Đang tải câu hỏi...</div>
+        <div id="canvas-options-list" class="canvas-options-list"></div>
+      </div>
+
+      <!-- Bottom Navigation Buttons -->
+      <div class="canvas-bottom-actions">
+        <div id="canvas-timer-text" style="font-size: 13px; color: var(--text-muted); font-variant-numeric: tabular-nums;">
+          ⏱️ 00:00
+        </div>
+        <div class="nav-btn-group">
+          <button id="btn-canvas-back" class="btn-canvas-back" disabled>
+            Back
+          </button>
+          <button id="btn-canvas-next" class="btn-canvas-next">
+            Next
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- STEP 3: RESULT SCREEN & KNOWLEDGE TREE CELEBRATION -->
+    <div id="result-section" class="card" style="display: none;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <div id="result-attempt-badge" class="badge badge-warning" style="margin-bottom: 8px;">KẾT QUẢ BÀI LÀM</div>
+        <h2 id="result-headline" style="font-size: 26px; font-weight: 800; margin-bottom: 6px;">🎉 Hoàn thành bài tập!</h2>
+        <p style="color: var(--text-secondary); font-size: 14px;">Xem lại điểm số, phần thưởng EXP cho Cây Tri Thức và phân tích giải thích chi tiết bên dưới.</p>
+      </div>
+
+      <!-- Tree EXP Reward Widget -->
+      <div id="tree-reward-container"></div>
+
+      <!-- Score KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-title">ĐIỂM SỐ</div>
+          <div id="result-score-val" class="kpi-value purple">0/0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">ĐỘ CHÍNH XÁC</div>
+          <div id="result-accuracy-val" class="kpi-value green">0%</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">THỜI GIAN LÀM</div>
+          <div id="result-time-val" class="kpi-value cyan">00:00</div>
+        </div>
+      </div>
+
+      <!-- Retake Box -->
+      <div id="retake-container" style="text-align: center; margin-bottom: 24px; padding: 16px; background: var(--bg-input); border-radius: var(--radius-md);">
+        <p id="retake-info-text" style="font-size: 13.5px; margin-bottom: 12px; color: var(--text-secondary);"></p>
+        <button id="btn-retake-quiz" class="btn btn-secondary" style="display: none;">
+          🔄 Làm lại bài (Lần 2)
+        </button>
+      </div>
+
+      <!-- Detailed Explanation Review (NotebookLM Highlight Ready) -->
+      <div style="margin-top: 30px;">
+        <h3 style="font-size: 17px; font-weight: 800; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+          📖 Phân tích chi tiết & Highlight Từ khóa (NotebookLM)
+        </h3>
+        <div id="review-questions-container"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/treeEngine.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/quiz.js"></script>
+</body>
+</html>

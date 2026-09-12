@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Dashboard - Thống kê kết quả TOEIC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Teacher PIN Gate Modal -->
+  <div id="pin-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="brand-badge" style="display: inline-block; margin-bottom: 12px;">BẢO MẬT GIÁO VIÊN</div>
+      <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 8px;">Nhập mã PIN truy cập</h3>
+      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">
+        Trang thống kê này dành riêng cho Giáo viên. Vui lòng nhập mã PIN (Mặc định: <code>123456</code>).
+      </p>
+      <div class="form-group">
+        <input type="password" id="input-pin" class="form-input" placeholder="Nhập mã PIN..." style="text-align: center; font-size: 18px; letter-spacing: 4px;" autofocus>
+      </div>
+      <button id="btn-verify-pin" class="btn btn-primary btn-block btn-lg">
+        🔓 Mở khóa Dashboard
+      </button>
+      <div id="pin-error-msg" style="display: none; color: var(--accent-danger); font-size: 13px; margin-top: 10px; font-weight: 600;">
+        Mã PIN không chính xác!
+      </div>
+    </div>
+  </div>
+
+  <div class="container-wide">
+    <!-- Header -->
+    <header class="app-header">
+      <a href="index.html" class="brand">
+        <span class="brand-badge">TEACHER</span>
+        <span class="brand-title">TOEIC Analytics Dashboard</span>
+      </a>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <button id="btn-toggle-theme" class="btn-icon" title="Chuyển chế độ Sáng/Tối">
+          🌓
+        </button>
+        <nav class="nav-links">
+          <a href="admin.html" class="nav-link">Tạo đề mới</a>
+          <a href="dashboard.html" class="nav-link active">Dashboard GV</a>
+          <a href="quiz.html" class="nav-link">Làm bài</a>
+          <a href="student.html" class="nav-link">Cây Tri Thức</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Top Assignment Selector & Filter -->
+    <div class="card" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 24px;">
+      <div style="flex: 1; min-width: 250px;">
+        <label class="form-label" for="select-assignment" style="margin-bottom: 4px;">Chọn bài tập phân tích:</label>
+        <select id="select-assignment" class="form-select" style="font-weight: 700;">
+          <option value="">-- Đang tải danh sách bài tập --</option>
+        </select>
+      </div>
+
+      <div style="min-width: 180px;">
+        <label class="form-label" for="filter-class" style="margin-bottom: 4px;">Lọc theo Lớp:</label>
+        <select id="filter-class" class="form-select">
+          <option value="ALL">Tất cả các lớp</option>
+          <option value="TOEIC_B_TB39">Lớp TOEIC_B_TB39</option>
+          <option value="TOEIC_B_TB45">Lớp TOEIC_B_TB45</option>
+        </select>
+      </div>
+
+      <div style="display: flex; gap: 10px; align-self: flex-end;">
+        <button id="btn-refresh-dashboard" class="btn btn-secondary">
+          🔄 Tải lại
+        </button>
+        <button id="btn-copy-quiz-link" class="btn btn-primary">
+          📋 Link Canvas
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-title">TỔNG LƯỢT NỘP</div>
+        <div id="kpi-total-subs" class="kpi-value purple">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">ĐIỂM TRUNG BÌNH</div>
+        <div id="kpi-avg-score" class="kpi-value green">0.0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">ĐỘ CHÍNH XÁC TB</div>
+        <div id="kpi-avg-accuracy" class="kpi-value orange">0%</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">THỜI GIAN LÀM TB</div>
+        <div id="kpi-avg-time" class="kpi-value cyan">00:00</div>
+      </div>
+    </div>
+
+    <!-- Chart: Tỷ lệ sai theo từng câu -->
+    <div class="card">
+      <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+        <span>📊 Tần suất làm sai theo từng câu hỏi</span>
+        <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">(Cột càng cao = càng nhiều học sinh sai)</span>
+      </h3>
+      <div style="height: 280px; position: relative;">
+        <canvas id="chart-wrong-questions"></canvas>
+      </div>
+    </div>
+
+    <!-- Top 5 Câu Sai Nhiều Nhất (Dành cho Giáo viên chữa bài) -->
+    <div class="card">
+      <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--accent-danger); display: flex; align-items: center; gap: 8px;">
+        🚨 Top 5 câu học sinh sai nhiều nhất (Cần chữa kỹ trên lớp)
+      </h3>
+      <div id="top-wrong-container">
+        <p style="color: var(--text-muted); font-size: 14px;">Chưa có dữ liệu phân tích câu sai.</p>
+      </div>
+    </div>
+
+    <!-- Leaderboard Table -->
+    <div class="card">
+      <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+        <span>🏆 Bảng xếp hạng & Danh sách bài nộp</span>
+        <span id="leaderboard-count" class="badge badge-primary">0 bài</span>
+      </h3>
+      <div class="table-responsive">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th style="width: 50px;">Hạng</th>
+              <th>Học sinh</th>
+              <th>Lớp</th>
+              <th>Điểm số</th>
+              <th>Độ chính xác</th>
+              <th>Thời gian</th>
+              <th>Lần nộp</th>
+              <th>Thời điểm nộp</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-tbody">
+            <tr>
+              <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                Đang tải dữ liệu...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

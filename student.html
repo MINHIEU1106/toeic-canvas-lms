@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cây Tri Thức & Tiến độ học viên</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div class="container-wide">
+    <!-- Header -->
+    <header class="app-header">
+      <a href="index.html" class="brand">
+        <span class="brand-badge">STUDENT</span>
+        <span class="brand-title">Cây Tri Thức & Hồ Sơ Học Tập</span>
+      </a>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <button id="btn-toggle-theme" class="btn-icon" title="Chuyển chế độ Sáng/Tối">
+          🌓
+        </button>
+        <nav class="nav-links">
+          <a href="quiz.html" class="nav-link">Làm bài</a>
+          <a href="student.html" class="nav-link active">Cây Tri Thức</a>
+          <a href="dashboard.html" class="nav-link">Dashboard GV</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Student Selector -->
+    <div class="card" style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; padding: 18px 24px;">
+      <div style="flex: 1; min-width: 250px;">
+        <label class="form-label" for="select-student-profile" style="margin-bottom: 4px;">Chọn học viên xem cây tri thức:</label>
+        <select id="select-student-profile" class="form-select" style="font-weight: 700;">
+          <option value="">-- Đang tải danh sách học sinh --</option>
+        </select>
+      </div>
+
+      <div id="student-summary-info" style="display: flex; gap: 16px; align-items: center;">
+        <div>
+          <span class="text-secondary" style="font-size: 13px;">Lớp:</span>
+          <strong id="student-class-badge" class="badge badge-primary" style="margin-left: 6px;">--</strong>
+        </div>
+        <div>
+          <span class="text-secondary" style="font-size: 13px;">Tổng bài đã làm:</span>
+          <strong id="student-total-done" class="badge badge-success" style="margin-left: 6px;">0 bài</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Knowledge Tree Hero Section -->
+    <div id="student-tree-container"></div>
+
+    <!-- Analytics Charts Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; margin-bottom: 24px;">
+      
+      <!-- Chart 1: Line Chart Điểm số & Độ chính xác qua các bài -->
+      <div class="card" style="margin-bottom: 0;">
+        <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 14px; color: #60a5fa;">
+          📈 Xu hướng điểm số & Độ chính xác (% Đúng)
+        </h3>
+        <div style="height: 260px; position: relative;">
+          <canvas id="chart-student-progress"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 2: Radar/Bar Chart Tần suất sai theo Chuyên đề Ngữ pháp -->
+      <div class="card" style="margin-bottom: 0;">
+        <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 14px; color: var(--accent-danger);">
+          🎯 Chuyên đề ngữ pháp thường mắc lỗi sai
+        </h3>
+        <div style="height: 260px; position: relative;">
+          <canvas id="chart-category-mistakes"></canvas>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- History Submissions Table -->
+    <div class="card">
+      <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">
+        📜 Lịch sử các bài tập đã nộp
+      </h3>
+      <div class="table-responsive">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Mã bài tập</th>
+              <th>Thời điểm nộp</th>
+              <th>Điểm số</th>
+              <th>Độ chính xác</th>
+              <th>Thời gian làm</th>
+              <th>Lần làm</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="student-history-tbody">
+            <tr>
+              <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                Vui lòng chọn học viên để xem lịch sử.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/treeEngine.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/student.js"></script>
+</body>
+</html>

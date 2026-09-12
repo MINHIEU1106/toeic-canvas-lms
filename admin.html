@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - Tạo đề bài TOEIC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Teacher PIN Gate Modal -->
+  <div id="pin-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="brand-badge" style="display: inline-block; margin-bottom: 12px;">ADMIN PANEL</div>
+      <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 8px;">Nhập mã PIN Giáo viên</h3>
+      <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">
+        Trang này dùng để tạo và quản lý đề bài TOEIC. Mã PIN mặc định: <code>123456</code>.
+      </p>
+      <div class="form-group">
+        <input type="password" id="input-pin" class="form-input" placeholder="Nhập mã PIN..." style="text-align: center; font-size: 18px; letter-spacing: 4px;" autofocus>
+      </div>
+      <button id="btn-verify-pin" class="btn btn-primary btn-block btn-lg">
+        🔓 Truy cập Admin Panel
+      </button>
+      <div id="pin-error-msg" style="display: none; color: var(--accent-danger); font-size: 13px; margin-top: 10px; font-weight: 600;">
+        Mã PIN không chính xác!
+      </div>
+    </div>
+  </div>
+
+  <div class="container-wide">
+    <!-- Header -->
+    <header class="app-header">
+      <a href="index.html" class="brand">
+        <span class="brand-badge">ADMIN</span>
+        <span class="brand-title">Quản Lý & Xuất Bản Đề Bài</span>
+      </a>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <button id="btn-toggle-theme" class="btn-icon" title="Chuyển chế độ Sáng/Tối">
+          🌓
+        </button>
+        <nav class="nav-links">
+          <a href="admin.html" class="nav-link active">Tạo đề mới</a>
+          <a href="dashboard.html" class="nav-link">Dashboard GV</a>
+          <a href="quiz.html" class="nav-link">Làm bài</a>
+          <a href="student.html" class="nav-link">Cây Tri Thức</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Creator Form Grid -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+      
+      <!-- Left Column: JSON Editor & Controls -->
+      <div class="card" style="margin-bottom: 0;">
+        <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+          <span>📝 Dán JSON Đề bài (NotebookLM)</span>
+          <button id="btn-load-sample" class="btn btn-secondary" style="padding: 4px 10px; font-size: 12px;">
+            Dán mẫu chuẩn (Highlight)
+          </button>
+        </h3>
+
+        <div class="form-group">
+          <label class="form-label" for="json-input">Nội dung JSON:</label>
+          <textarea id="json-input" class="form-textarea" rows="18" placeholder="Dán cấu trúc JSON đề bài vào đây..." style="font-family: monospace; font-size: 12px; line-height: 1.5;"></textarea>
+        </div>
+
+        <div id="validation-msg" style="display: none; padding: 10px 14px; border-radius: var(--radius-md); font-size: 13px; margin-bottom: 16px;"></div>
+
+        <div style="display: flex; gap: 10px;">
+          <button id="btn-validate-json" class="btn btn-secondary" style="flex: 1;">
+            🔍 Kiểm tra cú pháp
+          </button>
+          <button id="btn-publish-assignment" class="btn btn-primary" style="flex: 1.5;">
+            🚀 Xuất bản Đề bài
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Column: Live Preview & Generated Link -->
+      <div>
+        <!-- Link Result Card (Hidden until published) -->
+        <div id="generated-link-card" class="card" style="display: none; border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.05); margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 8px; color: var(--accent-success); font-weight: 700; margin-bottom: 8px;">
+            <span>🎉 Đề bài đã sẵn sàng! Link Canvas gửi cho học sinh:</span>
+          </div>
+          <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+            <input type="text" id="generated-url-input" class="form-input" readonly style="font-weight: 600; color: #60a5fa;">
+            <button id="btn-copy-generated-url" class="btn btn-primary" style="white-space: nowrap;">
+              Sao chép
+            </button>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <a id="btn-open-quiz-test" href="#" target="_blank" class="btn btn-secondary" style="padding: 6px 14px; font-size: 13px;">
+              🔗 Mở Canvas làm thử
+            </a>
+            <a id="btn-open-dashboard-test" href="#" target="_blank" class="btn btn-secondary" style="padding: 6px 14px; font-size: 13px;">
+              📊 Xem Dashboard
+            </a>
+          </div>
+        </div>
+
+        <!-- Live Preview Card -->
+        <div class="card" style="margin-bottom: 0; max-height: 520px; overflow-y: auto;">
+          <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px; color: #60a5fa;">
+            👁️ Xem trước Đề bài (Live Preview)
+          </h3>
+          <div id="preview-container">
+            <p style="color: var(--text-muted); font-size: 14px;">Bấm "Kiểm tra cú pháp" để xem trước giao diện câu hỏi.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Existing Assignments List -->
+    <div class="card" style="margin-top: 24px;">
+      <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">
+        📚 Danh sách đề bài đã tạo trên Google Sheets
+      </h3>
+      <div class="table-responsive">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Mã đề bài</th>
+              <th>Tiêu đề</th>
+              <th>Số câu hỏi</th>
+              <th>Ngày tạo</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="assignments-list-tbody">
+            <tr>
+              <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 20px;">
+                Đang tải danh sách bài tập...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
