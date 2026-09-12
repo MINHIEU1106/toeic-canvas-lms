@@ -1033,9 +1033,19 @@ const API = {
         return { success: true, data: store.students };
 
       case "getAssignment": {
-        const found = store.assignments.find(
-          a => String(a.assignmentId).toLowerCase() === String(params.id).toLowerCase()
+        const reqId = String(params.id || "").trim().toLowerCase();
+        let found = store.assignments.find(
+          a => String(a.assignmentId).trim().toLowerCase() === reqId
         );
+        // Tự động thích ứng nếu là đề mẫu bất kỳ (hỗ trợ test ngay lập tức mọi link)
+        if (!found && store.assignments.length > 0) {
+          const sample = store.assignments[0];
+          found = {
+            ...sample,
+            assignmentId: params.id || sample.assignmentId,
+            title: `${sample.title}`
+          };
+        }
         if (found) return { success: true, data: found };
         return { success: false, message: `Không tìm thấy đề bài: ${params.id}` };
       }
@@ -1229,118 +1239,138 @@ const API = {
   },
 
   getLocalStore() {
+    const sampleQuestions = [
+      {
+        "id": 1,
+        "question": "The problem with its record keeping system ------- by Franklin Financial next month.",
+        "highlightedQuestion": "The problem with its record keeping system ------- by Franklin Financial <mark class=\"hl-kw\">next month</mark>.",
+        "options": [
+          {
+            "key": "A",
+            "text": "is addressing",
+            "explanation": "Does not fit grammatically because the subject is 'The problem,' which is not performing the action."
+          },
+          {
+            "key": "B",
+            "text": "will be addressed",
+            "explanation": "Forms a proper future passive construction that matches the sentence structure."
+          },
+          {
+            "key": "C",
+            "text": "addressing",
+            "explanation": "Participle alone cannot act as the main verb of the predicate."
+          },
+          {
+            "key": "D",
+            "text": "addressed",
+            "explanation": "Past tense verb conflicts with the future time expression 'next month'."
+          }
+        ],
+        "correct": "B",
+        "category": "Thể bị động & Thì tương lai",
+        "explanation": "Chủ ngữ là vật 'The problem' kết hợp trạng từ chỉ tương lai '<mark class=\"hl-kw\">next month</mark>' -> Dùng tương lai đơn thể bị động: <strong>will be + V3/ed</strong>.",
+        "translation": "Vấn đề với hệ thống lưu trữ hồ sơ của nó sẽ được Franklin Financial giải quyết vào tháng tới."
+      },
+      {
+        "id": 2,
+        "question": "All marketing interns are required ------- the orientation session before starting their daily tasks.",
+        "highlightedQuestion": "All marketing interns are <mark class=\"hl-kw\">required -------</mark> the orientation session before starting their daily tasks.",
+        "options": [
+          {"key": "A", "text": "attend", "explanation": "Requires 'to' before base verb."},
+          {"key": "B", "text": "to attend", "explanation": "Matches the passive structure 'be required to-V'."},
+          {"key": "C", "text": "attending", "explanation": "Gerund cannot follow 'be required'."},
+          {"key": "D", "text": "attended", "explanation": "Past participle form is incorrect here."}
+        ],
+        "correct": "B",
+        "category": "Cấu trúc Bị động To-V",
+        "explanation": "Cấu trúc ngữ pháp chuẩn: <strong>be required + to-V</strong> (được yêu cầu làm việc gì).",
+        "translation": "Tất cả thực tập sinh tiếp thị đều được yêu cầu tham dự buổi định hướng trước khi bắt đầu nhiệm vụ hàng ngày của họ."
+      },
+      {
+        "id": 3,
+        "question": "The management team decided to ------- the launch of the new product due to supply chain disruptions.",
+        "highlightedQuestion": "The management team <mark class=\"hl-kw\">decided to -------</mark> the launch of the new product due to supply chain disruptions.",
+        "options": [
+          {"key": "A", "text": "postpone", "explanation": "Correct base verb after 'to'."},
+          {"key": "B", "text": "postponed", "explanation": "Past tense form cannot follow infinitive marker 'to'."},
+          {"key": "C", "text": "postponing", "explanation": "V-ing cannot follow 'decided to'."},
+          {"key": "D", "text": "postponement", "explanation": "Noun form does not fit verb position."}
+        ],
+        "correct": "A",
+        "category": "Cấu trúc To-V nguyên mẫu",
+        "explanation": "Cấu trúc: <strong>decide + to-V (nguyên mẫu)</strong> (quyết định làm gì). 'postpone' = trì hoãn.",
+        "translation": "Đội ngũ quản lý đã quyết định hoãn việc ra mắt sản phẩm mới do sự gián đoạn chuỗi cung ứng."
+      }
+    ];
+
+    const sampleGroups = [
+      {
+        "groupId": "G1",
+        "passageTitle": "Questions 4-5 refer to the following email notice:",
+        "passageText": "From: Facilities Department <facilities@greenwoodcorp.com>\nTo: All Greenwood Employees\nDate: October 14\nSubject: Scheduled Elevator Maintenance\n\nPlease be advised that the main elevators in Building A will undergo <mark class=\"hl-evidence\">mandatory safety inspections this Friday from 8:00 PM to 11:00 PM</mark>. During this time, elevator service will be temporarily unavailable. Employees working late are advised to <mark class=\"hl-evidence\">use the north stairwells or the freight elevator</mark> located near the loading dock.\n\nWe apologize for any inconvenience caused and appreciate your cooperation.",
+        "transcriptTranslation": "Phòng Cơ sở vật chất thông báo: Thang máy chính tại Tòa nhà A sẽ được kiểm tra an toàn bắt buộc vào thứ Sáu tuần này từ 8:00 tối đến 11:00 tối...",
+        "audioUrl": "",
+        "questions": [
+          {
+            "id": 4,
+            "question": "What is the purpose of the email notice?",
+            "highlightedQuestion": "What is the <mark class=\"hl-kw\">purpose</mark> of the email notice?",
+            "options": [
+              {"key": "A", "text": "To announce a temporary shutdown of the cafeteria", "explanation": "Not mentioned."},
+              {"key": "B", "text": "To inform staff of scheduled elevator maintenance", "explanation": "Direct match with the notice topic."},
+              {"key": "C", "text": "To recruit employees for the inspection team", "explanation": "Incorrect."},
+              {"key": "D", "text": "To change the building operating hours", "explanation": "Incorrect."}
+            ],
+            "correct": "B",
+            "category": "Part 7 - Mục đích đoạn văn",
+            "explanation": "Dòng 1 của email nêu rõ: '...will undergo <mark class=\"hl-evidence\">mandatory safety inspections this Friday</mark>'.",
+            "translation": "Mục đích của thông báo qua email là gì? -> Để thông báo cho nhân viên về việc bảo trì thang máy theo lịch trình."
+          },
+          {
+            "id": 5,
+            "question": "According to the notice, what should employees working late do?",
+            "highlightedQuestion": "According to the notice, what should <mark class=\"hl-kw\">employees working late</mark> do?",
+            "options": [
+              {"key": "A", "text": "Leave the building before 8:00 PM", "explanation": "Not required."},
+              {"key": "B", "text": "Contact the facility manager immediately", "explanation": "Not mentioned."},
+              {"key": "C", "text": "Use the north stairwells or freight elevator", "explanation": "Directly matches text recommendation."},
+              {"key": "D", "text": "Reschedule their work for the weekend", "explanation": "Incorrect."}
+            ],
+            "correct": "C",
+            "category": "Part 7 - Chi tiết hướng dẫn",
+            "explanation": "Đoạn văn hướng dẫn rõ: 'Employees working late are advised to <mark class=\"hl-evidence\">use the north stairwells or the freight elevator</mark>'.",
+            "translation": "Theo thông báo, những nhân viên làm việc muộn nên làm gì? -> Sử dụng cầu thang bộ phía bắc hoặc thang máy chở hàng."
+          }
+        ]
+      }
+    ];
+
     const defaultData = {
       students: CONFIG.MOCK_STUDENTS,
       assignments: [
+        {
+          "assignmentId": "TOEIC_B_TB39_HW01",
+          "title": "BTVN Chuyên đề: To-V, Bị Động & Đọc hiểu (Lớp TB39)",
+          "audioUrl": "",
+          "instructions": "Chọn đáp án đúng nhất cho từng câu hỏi bên dưới. Bạn có tối đa 2 lần làm bài.",
+          "questions": sampleQuestions,
+          "groups": sampleGroups
+        },
+        {
+          "assignmentId": "TOEIC_B_TB45_HW01",
+          "title": "BTVN Chuyên đề: To-V, Bị Động & Đọc hiểu (Lớp TB45)",
+          "audioUrl": "",
+          "instructions": "Chọn đáp án đúng nhất cho từng câu hỏi bên dưới. Bạn có tối đa 2 lần làm bài.",
+          "questions": sampleQuestions,
+          "groups": sampleGroups
+        },
         {
           "assignmentId": "TOEIC_HW_01",
           "title": "BTVN Chuyên đề: To-V, Bị Động & Đọc hiểu (Part 5 & 7)",
           "audioUrl": "",
           "instructions": "Chọn đáp án đúng nhất cho từng câu hỏi bên dưới. Bạn có tối đa 2 lần làm bài.",
-          "questions": [
-            {
-              "id": 1,
-              "question": "The problem with its record keeping system ------- by Franklin Financial next month.",
-              "highlightedQuestion": "The problem with its record keeping system ------- by Franklin Financial <mark class=\"hl-kw\">next month</mark>.",
-              "options": [
-                {
-                  "key": "A",
-                  "text": "is addressing",
-                  "explanation": "Does not fit grammatically because the subject is 'The problem,' which is not performing the action."
-                },
-                {
-                  "key": "B",
-                  "text": "will be addressed",
-                  "explanation": "Forms a proper future passive construction that matches the sentence structure."
-                },
-                {
-                  "key": "C",
-                  "text": "addressing",
-                  "explanation": "Participle alone cannot act as the main verb of the predicate."
-                },
-                {
-                  "key": "D",
-                  "text": "addressed",
-                  "explanation": "Past tense verb conflicts with the future time expression 'next month'."
-                }
-              ],
-              "correct": "B",
-              "category": "Thể bị động",
-              "explanation": "Chủ ngữ là vật 'The problem' kết hợp trạng từ chỉ tương lai '<mark class=\"hl-kw\">next month</mark>' -> Dùng tương lai đơn thể bị động: <strong>will be + V3/ed</strong>.",
-              "translation": "Vấn đề với hệ thống lưu trữ hồ sơ của nó sẽ được Franklin Financial giải quyết vào tháng tới."
-            },
-            {
-              "id": 2,
-              "question": "All marketing interns are required ------- the orientation session before starting their daily tasks.",
-              "highlightedQuestion": "All marketing interns are <mark class=\"hl-kw\">required -------</mark> the orientation session before starting their daily tasks.",
-              "options": [
-                {"key": "A", "text": "attend", "explanation": "Requires 'to' before base verb."},
-                {"key": "B", "text": "to attend", "explanation": "Matches the passive structure 'be required to-V'."},
-                {"key": "C", "text": "attending", "explanation": "Gerund cannot follow 'be required'."},
-                {"key": "D", "text": "attended", "explanation": "Past participle form is incorrect here."}
-              ],
-              "correct": "B",
-              "category": "Cấu trúc Bị động To-V",
-              "explanation": "Cấu trúc ngữ pháp chuẩn: <strong>be required + to-V</strong> (được yêu cầu làm việc gì).",
-              "translation": "Tất cả thực tập sinh tiếp thị đều được yêu cầu tham dự buổi định hướng trước khi bắt đầu nhiệm vụ hàng ngày của họ."
-            },
-            {
-              "id": 3,
-              "question": "The management team decided to ------- the launch of the new product due to supply chain disruptions.",
-              "highlightedQuestion": "The management team <mark class=\"hl-kw\">decided to -------</mark> the launch of the new product due to supply chain disruptions.",
-              "options": [
-                {"key": "A", "text": "postpone", "explanation": "Correct base verb after 'to'."},
-                {"key": "B", "text": "postponed", "explanation": "Past tense form cannot follow infinitive marker 'to'."},
-                {"key": "C", "text": "postponing", "explanation": "V-ing cannot follow 'decided to'."},
-                {"key": "D", "text": "postponement", "explanation": "Noun form does not fit verb position."}
-              ],
-              "correct": "A",
-              "category": "Cấu trúc To-V",
-              "explanation": "Cấu trúc: <strong>decide + to-V (nguyên mẫu)</strong> (quyết định làm gì). 'postpone' = trì hoãn.",
-              "translation": "Đội ngũ quản lý đã quyết định hoãn việc ra mắt sản phẩm mới do sự gián đoạn chuỗi cung ứng."
-            }
-          ],
-          "groups": [
-            {
-              "groupId": "G1",
-              "passageTitle": "Questions 4-5 refer to the following email notice:",
-              "passageText": "From: Facilities Department <facilities@greenwoodcorp.com>\nTo: All Greenwood Employees\nDate: October 14\nSubject: Scheduled Elevator Maintenance\n\nPlease be advised that the main elevators in Building A will undergo <mark class=\"hl-evidence\">mandatory safety inspections this Friday from 8:00 PM to 11:00 PM</mark>. During this time, elevator service will be temporarily unavailable. Employees working late are advised to <mark class=\"hl-evidence\">use the north stairwells or the freight elevator</mark> located near the loading dock.\n\nWe apologize for any inconvenience caused and appreciate your cooperation.",
-              "transcriptTranslation": "Phòng Cơ sở vật chất thông báo: Thang máy chính tại Tòa nhà A sẽ được kiểm tra an toàn bắt buộc vào thứ Sáu tuần này từ 8:00 tối đến 11:00 tối...",
-              "audioUrl": "",
-              "questions": [
-                {
-                  "id": 4,
-                  "question": "What is the purpose of the email notice?",
-                  "highlightedQuestion": "What is the <mark class=\"hl-kw\">purpose</mark> of the email notice?",
-                  "options": [
-                    {"key": "A", "text": "To announce a temporary shutdown of the cafeteria", "explanation": "Not mentioned."},
-                    {"key": "B", "text": "To inform staff of scheduled elevator maintenance", "explanation": "Direct match with the notice topic."},
-                    {"key": "C", "text": "To recruit employees for the inspection team", "explanation": "Incorrect."},
-                    {"key": "D", "text": "To change the building operating hours", "explanation": "Incorrect."}
-                  ],
-                  "correct": "B",
-                  "category": "Part 7 - Mục đích đoạn văn",
-                  "explanation": "Dòng 1 của email nêu rõ: '...will undergo <mark class=\"hl-evidence\">mandatory safety inspections this Friday</mark>'.",
-                  "translation": "Mục đích của thông báo qua email là gì? -> Để thông báo cho nhân viên về việc bảo trì thang máy theo lịch trình."
-                },
-                {
-                  "id": 5,
-                  "question": "According to the notice, what should employees working late do?",
-                  "highlightedQuestion": "According to the notice, what should <mark class=\"hl-kw\">employees working late</mark> do?",
-                  "options": [
-                    {"key": "A", "text": "Leave the building before 8:00 PM", "explanation": "Not required."},
-                    {"key": "B", "text": "Contact the facility manager immediately", "explanation": "Not mentioned."},
-                    {"key": "C", "text": "Use the north stairwells or freight elevator", "explanation": "Directly matches text recommendation."},
-                    {"key": "D", "text": "Reschedule their work for the weekend", "explanation": "Incorrect."}
-                  ],
-                  "correct": "C",
-                  "category": "Part 7 - Chi tiết hướng dẫn",
-                  "explanation": "Đoạn văn hướng dẫn rõ: 'Employees working late are advised to <mark class=\"hl-evidence\">use the north stairwells or the freight elevator</mark>'.",
-                  "translation": "Theo thông báo, những nhân viên làm việc muộn nên làm gì? -> Sử dụng cầu thang bộ phía bắc hoặc thang máy chở hàng."
-                }
-              ]
-            }
-          ]
+          "questions": sampleQuestions,
+          "groups": sampleGroups
         }
       ],
       submissions: [
@@ -1349,16 +1379,16 @@ const API = {
           studentId: "TOEIC_B_TB39_01",
           studentName: "Trần Văn Bằng",
           studentClass: "TOEIC_B_TB39",
-          assignmentId: "TOEIC_HW_01",
+          assignmentId: "TOEIC_B_TB39_HW01",
           timeSpentSeconds: 310,
           score: 5,
           totalQuestions: 5,
           accuracyRate: 100,
           attemptNumber: 1,
           answersDetail: [
-            { questionId: 1, selected: "B", correct: "B", isCorrect: true, category: "Thể bị động" },
+            { questionId: 1, selected: "B", correct: "B", isCorrect: true, category: "Thể bị động & Thì tương lai" },
             { questionId: 2, selected: "B", correct: "B", isCorrect: true, category: "Cấu trúc Bị động To-V" },
-            { questionId: 3, selected: "A", correct: "A", isCorrect: true, category: "Cấu trúc To-V" },
+            { questionId: 3, selected: "A", correct: "A", isCorrect: true, category: "Cấu trúc To-V nguyên mẫu" },
             { questionId: 4, selected: "B", correct: "B", isCorrect: true, category: "Part 7 - Mục đích đoạn văn" },
             { questionId: 5, selected: "C", correct: "C", isCorrect: true, category: "Part 7 - Chi tiết hướng dẫn" }
           ],
@@ -1368,7 +1398,7 @@ const API = {
     };
 
     try {
-      const raw = localStorage.getItem("TOEIC_LMS_STORE_V2");
+      const raw = localStorage.getItem("TOEIC_LMS_STORE_V3");
       if (raw) return JSON.parse(raw);
     } catch (e) {}
 
@@ -1377,7 +1407,7 @@ const API = {
 
   saveLocalStore(data) {
     try {
-      localStorage.setItem("TOEIC_LMS_STORE_V2", JSON.stringify(data));
+      localStorage.setItem("TOEIC_LMS_STORE_V3", JSON.stringify(data));
     } catch (e) {}
   }
 };
